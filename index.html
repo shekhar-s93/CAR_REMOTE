@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP32 Robot Car</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#111;
+  color:#fff;
+}
+
+/* ===== NAVBAR ===== */
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  background:#1e1e1e;
+}
+.nav-group{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.nav-btn{
+  padding:12px 16px;
+  border:none;
+  border-radius:8px;
+  background:#444;
+  color:#fff;
+  font-size:14px;
+}
+
+/* yellow ON */
+.nav-btn.on{
+  background:#f1c40f;
+  color:#000;
+}
+
+/* ===== CONNECTION DOT (MORE BIGGER) ===== */
+.status-dot{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  box-shadow:0 0 10px rgba(0,0,0,0.7);
+}
+
+@keyframes blinkRed{
+  0%{opacity:1}
+  50%{opacity:.3}
+  100%{opacity:1}
+}
+.status-disconnected{
+  background:#e74c3c;
+  animation:blinkRed 1s infinite;
+}
+.status-connected{
+  background:#2ecc71;
+}
+
+/* ===== INDICATOR BLINK ===== */
+@keyframes blinkYellow{
+  0%{background:#f1c40f;color:#000}
+  50%{background:#444;color:#fff}
+  100%{background:#f1c40f;color:#000}
+}
+.nav-btn.blink{
+  animation:blinkYellow 1s infinite;
+}
+
+/* ===== BUTTONS ===== */
+.btn{
+  padding:16px 22px;
+  margin:8px;
+  border:none;
+  border-radius:10px;
+  background:#444;
+  color:#fff;
+  font-size:18px;
+}
+.btn.move:active{background:#2ecc71;color:#000}
+.btn.green{background:#2ecc71;color:#000}
+.btn.red{background:#e74c3c;color:#fff}
+
+.btn.manual-disabled{
+  background:#222;
+  color:#777;
+  pointer-events:none;
+  opacity:.6;
+}
+
+/* ===== MIC ===== */
+@keyframes micPulse{
+  0%{box-shadow:0 0 0 0 rgba(46,204,113,.7)}
+  70%{box-shadow:0 0 0 20px rgba(46,204,113,0)}
+  100%{box-shadow:0 0 0 0 rgba(46,204,113,0)}
+}
+.btn.mic-listening{
+  background:#2ecc71;
+  color:#000;
+  animation:micPulse 1.5s infinite;
+}
+
+/* ===== MODE SELECT ===== */
+.container{text-align:center;padding:12px}
+.mode-title{font-size:14px;color:#aaa;margin-bottom:6px}
+.select-box{
+  width:70%;
+  max-width:320px;
+  padding:12px;
+  background:#444;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  font-size:16px;
+}
+
+/* ===== PANELS ===== */
+.panel{display:none;padding:10px;text-align:center}
+
+/* ===== MANUAL ===== */
+.manual-wrapper{
+  display:flex;
+  height:calc(100vh - 140px);
+}
+.manual-left,.manual-right{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.manual-left{
+  flex-direction:column;
+  justify-content:space-between;
+  padding:30px 0;
+}
+.manual-left .btn,
+.manual-right .btn{width:160px}
+.manual-right{gap:30px}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <div class="nav-group">
+    <button id="leftIndBtn" class="nav-btn" onclick="toggleLeftInd()">LEFT IND</button>
+  </div>
+
+  <div class="nav-group">
+    <button id="headBtn" class="nav-btn" onclick="toggleHead()">HEADLIGHT</button>
+    <div id="connDot" class="status-dot status-disconnected"></div>
+    <button id="hazBtn" class="nav-btn" onclick="toggleHaz()">HAZARD</button>
+  </div>
+
+  <div class="nav-group">
+    <button id="rightIndBtn" class="nav-btn" onclick="toggleRightInd()">RIGHT IND</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="mode-title">SELECT MODE</div>
+  <select id="modeSelect" class="select-box" onchange="changeMode(this.value)">
+    <option value="manual">Manual Mode</option>
+    <option value="auto">Automatic Mode</option>
+    <option value="follow">Follow Mode</option>
+    <option value="voice">Voice Mode</option>
+  </select>
+</div>
+
+<div id="manualPanel" class="panel">
+  <div class="manual-wrapper">
+    <div class="manual-left">
+      <button class="btn move manual-btn" onmousedown="move('f')">FORWARD</button>
+      <button id="stopBtn" class="btn manual-btn" onclick="stopCar()">STOP</button>
+      <button class="btn move manual-btn" onmousedown="move('b')">BACKWARD</button>
+    </div>
+    <div class="manual-right">
+      <button class="btn move manual-btn" onmousedown="move('l')">LEFT</button>
+      <button class="btn move manual-btn" onmousedown="move('r')">RIGHT</button>
+    </div>
+  </div>
+</div>
+
+<div id="autoPanel" class="panel">
+  <button id="autoOnBtn" class="btn" onclick="setAuto(true)">ON</button>
+  <button id="autoOffBtn" class="btn red" onclick="setAuto(false)">OFF</button>
+</div>
+
+<div id="followPanel" class="panel">
+  <button id="followOnBtn" class="btn" onclick="setFollow(true)">ON</button>
+  <button id="followOffBtn" class="btn red" onclick="setFollow(false)">OFF</button>
+</div>
+
+<div id="voicePanel" class="panel">
+  <button id="voiceOnBtn" class="btn" onclick="setVoice(true)">ON</button>
+  <button id="voiceOffBtn" class="btn red" onclick="setVoice(false)">OFF</button><br><br>
+  <button id="micBtn" class="btn" onclick="startMic()">TAP TO SPEAK</button>
+</div>
+
+<script>
+function cmd(d,s){fetch(`/cmd?dir=${d}&state=${s}`).catch(()=>{})}
+
+function hideAll(){document.querySelectorAll('.panel').forEach(p=>p.style.display='none')}
+function changeMode(m){
+  hideAll();
+  if(m==="manual")manualPanel.style.display="block";
+  if(m==="auto")autoPanel.style.display="block";
+  if(m==="follow")followPanel.style.display="block";
+  if(m==="voice")voicePanel.style.display="block";
+}
+
+/* manual */
+function stopCar(){stopBtn.classList.add("red");cmd('s',1)}
+function move(d){stopBtn.classList.remove("red");cmd(d,1);setTimeout(()=>cmd(d,0),200)}
+
+/* indicators */
+let leftOn=false,rightOn=false,hazOn=false,headOn=false;
+function toggleHead(){headOn=!headOn;headBtn.classList.toggle("on",headOn)}
+function toggleLeftInd(){leftOn=!leftOn;leftIndBtn.classList.toggle("blink",leftOn);rightIndBtn.classList.remove("blink")}
+function toggleRightInd(){rightOn=!rightOn;rightIndBtn.classList.toggle("blink",rightOn);leftIndBtn.classList.remove("blink")}
+function toggleHaz(){hazOn=!hazOn;hazBtn.classList.toggle("on",hazOn);leftIndBtn.classList.toggle("blink",hazOn);rightIndBtn.classList.toggle("blink",hazOn)}
+
+/* modes */
+let autoOn=false,followOn=false,voiceOn=false;
+function updateManualState(){
+  const d=autoOn||followOn||voiceOn;
+  document.querySelectorAll('.manual-btn').forEach(b=>b.classList.toggle('manual-disabled',d));
+}
+function updateModeDropdown(){
+  const o=modeSelect.options;
+  for(let i=0;i<o.length;i++) o[i].style.background="";
+  if(autoOn) o[1].style.background="#2ecc71";
+  else if(followOn) o[2].style.background="#2ecc71";
+  else if(voiceOn) o[3].style.background="#2ecc71";
+  else o[0].style.background="#2ecc71";
+}
+function setAuto(v){
+  autoOn=v;followOn=voiceOn=false;
+  autoOnBtn.className=v?"btn green":"btn";
+  autoOffBtn.className=v?"btn":"btn red";
+  followOnBtn.className="btn";followOffBtn.className="btn red";
+  voiceOnBtn.className="btn";voiceOffBtn.className="btn red";
+  updateManualState();updateModeDropdown();
+}
+function setFollow(v){
+  followOn=v;autoOn=voiceOn=false;
+  followOnBtn.className=v?"btn green":"btn";
+  followOffBtn.className=v?"btn":"btn red";
+  autoOnBtn.className="btn";autoOffBtn.className="btn red";
+  voiceOnBtn.className="btn";voiceOffBtn.className="btn red";
+  updateManualState();updateModeDropdown();
+}
+function setVoice(v){
+  voiceOn=v;autoOn=followOn=false;
+  voiceOnBtn.className=v?"btn green":"btn";
+  voiceOffBtn.className=v?"btn":"btn red";
+  autoOnBtn.className="btn";autoOffBtn.className="btn red";
+  followOnBtn.className="btn";followOffBtn.className="btn red";
+  updateManualState();updateModeDropdown();
+}
+
+/* mic */
+function startMic(){
+  if(!voiceOn)return alert("Voice Mode OFF");
+  micBtn.classList.add("mic-listening");
+  setTimeout(()=>micBtn.classList.remove("mic-listening"),3000);
+}
+
+/* init */
+manualPanel.style.display="block";
+updateManualState();
+updateModeDropdown();
+</script>
+
+</body>
+</html>
