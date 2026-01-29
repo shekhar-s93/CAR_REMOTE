@@ -12,6 +12,26 @@ body{
   color:#fff;
 }
 
+/* ===== LANDSCAPE ONLY ===== */
+#rotateNotice{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#000;
+  color:#fff;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:20px;
+  z-index:999;
+}
+#app{ display:block; }
+
+@media (orientation: portrait){
+  #app{ display:none; }
+  #rotateNotice{ display:flex; }
+}
+
 /* ===== NAVBAR ===== */
 .navbar{
   display:flex;
@@ -20,11 +40,7 @@ body{
   padding:10px;
   background:#1e1e1e;
 }
-.nav-group{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
+.nav-group{ display:flex; gap:10px; }
 
 .nav-btn{
   padding:12px 16px;
@@ -35,41 +51,19 @@ body{
   font-size:14px;
 }
 
-/* yellow ON */
 .nav-btn.on{
   background:#f1c40f;
   color:#000;
 }
 
-/* ===== CONNECTION DOT (MORE BIGGER) ===== */
-.status-dot{
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  box-shadow:0 0 10px rgba(0,0,0,0.7);
-}
-
-@keyframes blinkRed{
-  0%{opacity:1}
-  50%{opacity:.3}
-  100%{opacity:1}
-}
-.status-disconnected{
-  background:#e74c3c;
-  animation:blinkRed 1s infinite;
-}
-.status-connected{
-  background:#2ecc71;
-}
-
-/* ===== INDICATOR BLINK ===== */
-@keyframes blinkYellow{
-  0%{background:#f1c40f;color:#000}
-  50%{background:#444;color:#fff}
-  100%{background:#f1c40f;color:#000}
+/* ===== BLINKING YELLOW ===== */
+@keyframes blinkYellow {
+  0%   { background:#f1c40f; color:#000; }
+  50%  { background:#444; color:#fff; }
+  100% { background:#f1c40f; color:#000; }
 }
 .nav-btn.blink{
-  animation:blinkYellow 1s infinite;
+  animation: blinkYellow 1s infinite;
 }
 
 /* ===== BUTTONS ===== */
@@ -82,52 +76,61 @@ body{
   color:#fff;
   font-size:18px;
 }
-.btn.move:active{background:#2ecc71;color:#000}
-.btn.green{background:#2ecc71;color:#000}
-.btn.red{background:#e74c3c;color:#fff}
 
+.btn.move:active{
+  background:#2ecc71;
+  color:#000;
+}
+
+.btn.green{ background:#2ecc71; color:#000; }
+.btn.red{ background:#e74c3c; color:#fff; }
+
+/* ===== MANUAL DISABLED (NEW) ===== */
 .btn.manual-disabled{
   background:#222;
   color:#777;
   pointer-events:none;
-  opacity:.6;
+  opacity:0.6;
 }
 
-/* ===== MIC ===== */
-@keyframes micPulse{
-  0%{box-shadow:0 0 0 0 rgba(46,204,113,.7)}
-  70%{box-shadow:0 0 0 20px rgba(46,204,113,0)}
-  100%{box-shadow:0 0 0 0 rgba(46,204,113,0)}
+/* ===== MIC ANIMATION ===== */
+@keyframes micPulse {
+  0% { box-shadow:0 0 0 0 rgba(46,204,113,0.7); }
+  70%{ box-shadow:0 0 0 20px rgba(46,204,113,0); }
+  100%{ box-shadow:0 0 0 0 rgba(46,204,113,0); }
 }
 .btn.mic-listening{
   background:#2ecc71;
   color:#000;
-  animation:micPulse 1.5s infinite;
+  animation: micPulse 1.5s infinite;
 }
 
 /* ===== MODE SELECT ===== */
-.container{text-align:center;padding:12px}
-.mode-title{font-size:14px;color:#aaa;margin-bottom:6px}
+.container{
+  padding:12px;
+  text-align:center;
+}
 .select-box{
   width:70%;
   max-width:320px;
   padding:12px;
+  font-size:16px;
+  border-radius:8px;
+  border:none;
   background:#444;
   color:#fff;
-  border:none;
-  border-radius:8px;
-  font-size:16px;
 }
 
 /* ===== PANELS ===== */
-.panel{display:none;padding:10px;text-align:center}
+.panel{ display:none; padding:10px; text-align:center; }
 
-/* ===== MANUAL ===== */
+/* ===== MANUAL MODE ===== */
 .manual-wrapper{
   display:flex;
   height:calc(100vh - 140px);
 }
-.manual-left,.manual-right{
+.manual-left,
+.manual-right{
   flex:1;
   display:flex;
   align-items:center;
@@ -139,13 +142,20 @@ body{
   padding:30px 0;
 }
 .manual-left .btn,
-.manual-right .btn{width:160px}
-.manual-right{gap:30px}
+.manual-right .btn{ width:160px; }
+.manual-right{ gap:30px; }
 </style>
 </head>
 
 <body>
 
+<div id="rotateNotice">
+  <div>🔄 Rotate your phone<br>Landscape mode required</div>
+</div>
+
+<div id="app">
+
+<!-- ===== NAVBAR ===== -->
 <div class="navbar">
   <div class="nav-group">
     <button id="leftIndBtn" class="nav-btn" onclick="toggleLeftInd()">LEFT IND</button>
@@ -153,7 +163,6 @@ body{
 
   <div class="nav-group">
     <button id="headBtn" class="nav-btn" onclick="toggleHead()">HEADLIGHT</button>
-    <div id="connDot" class="status-dot status-disconnected"></div>
     <button id="hazBtn" class="nav-btn" onclick="toggleHaz()">HAZARD</button>
   </div>
 
@@ -162,6 +171,7 @@ body{
   </div>
 </div>
 
+<!-- ===== MODE SELECT ===== -->
 <div class="container">
   <div class="mode-title">SELECT MODE</div>
   <select id="modeSelect" class="select-box" onchange="changeMode(this.value)">
@@ -172,65 +182,111 @@ body{
   </select>
 </div>
 
+<!-- ===== MANUAL MODE ===== -->
 <div id="manualPanel" class="panel">
   <div class="manual-wrapper">
     <div class="manual-left">
-      <button class="btn move manual-btn" onmousedown="move('f')">FORWARD</button>
+      <button class="btn move manual-btn" onmousedown="move('f')" ontouchstart="move('f')">FORWARD</button>
       <button id="stopBtn" class="btn manual-btn" onclick="stopCar()">STOP</button>
-      <button class="btn move manual-btn" onmousedown="move('b')">BACKWARD</button>
+      <button class="btn move manual-btn" onmousedown="move('b')" ontouchstart="move('b')">BACKWARD</button>
     </div>
     <div class="manual-right">
-      <button class="btn move manual-btn" onmousedown="move('l')">LEFT</button>
-      <button class="btn move manual-btn" onmousedown="move('r')">RIGHT</button>
+      <button class="btn move manual-btn" onmousedown="move('l')" ontouchstart="move('l')">LEFT</button>
+      <button class="btn move manual-btn" onmousedown="move('r')" ontouchstart="move('r')">RIGHT</button>
     </div>
   </div>
 </div>
 
+<!-- ===== AUTOMATIC MODE ===== -->
 <div id="autoPanel" class="panel">
   <button id="autoOnBtn" class="btn" onclick="setAuto(true)">ON</button>
   <button id="autoOffBtn" class="btn red" onclick="setAuto(false)">OFF</button>
 </div>
 
+<!-- ===== FOLLOW MODE ===== -->
 <div id="followPanel" class="panel">
   <button id="followOnBtn" class="btn" onclick="setFollow(true)">ON</button>
   <button id="followOffBtn" class="btn red" onclick="setFollow(false)">OFF</button>
 </div>
 
+<!-- ===== VOICE MODE ===== -->
 <div id="voicePanel" class="panel">
   <button id="voiceOnBtn" class="btn" onclick="setVoice(true)">ON</button>
-  <button id="voiceOffBtn" class="btn red" onclick="setVoice(false)">OFF</button><br><br>
+  <button id="voiceOffBtn" class="btn red" onclick="setVoice(false)">OFF</button>
+  <br><br>
   <button id="micBtn" class="btn" onclick="startMic()">TAP TO SPEAK</button>
 </div>
 
-<script>
-function cmd(d,s){fetch(`/cmd?dir=${d}&state=${s}`).catch(()=>{})}
+</div>
 
-function hideAll(){document.querySelectorAll('.panel').forEach(p=>p.style.display='none')}
+<script>
+function cmd(d,s){ fetch(`/cmd?dir=${d}&state=${s}`); }
+
+/* ===== MODE SWITCH ===== */
+function hideAll(){
+  document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
+}
 function changeMode(m){
   hideAll();
-  if(m==="manual")manualPanel.style.display="block";
-  if(m==="auto")autoPanel.style.display="block";
-  if(m==="follow")followPanel.style.display="block";
-  if(m==="voice")voicePanel.style.display="block";
+  if(m==="manual") manualPanel.style.display="block";
+  if(m==="auto") autoPanel.style.display="block";
+  if(m==="follow") followPanel.style.display="block";
+  if(m==="voice") voicePanel.style.display="block";
 }
 
-/* manual */
-function stopCar(){stopBtn.classList.add("red");cmd('s',1)}
-function move(d){stopBtn.classList.remove("red");cmd(d,1);setTimeout(()=>cmd(d,0),200)}
+/* ===== MANUAL ===== */
+function stopCar(){
+  stopBtn.classList.add("red");
+  cmd('s',1);
+}
+function move(d){
+  stopBtn.classList.remove("red");
+  cmd(d,1);
+  setTimeout(()=>cmd(d,0),200);
+}
 
-/* indicators */
-let leftOn=false,rightOn=false,hazOn=false,headOn=false;
-function toggleHead(){headOn=!headOn;headBtn.classList.toggle("on",headOn)}
-function toggleLeftInd(){leftOn=!leftOn;leftIndBtn.classList.toggle("blink",leftOn);rightIndBtn.classList.remove("blink")}
-function toggleRightInd(){rightOn=!rightOn;rightIndBtn.classList.toggle("blink",rightOn);leftIndBtn.classList.remove("blink")}
-function toggleHaz(){hazOn=!hazOn;hazBtn.classList.toggle("on",hazOn);leftIndBtn.classList.toggle("blink",hazOn);rightIndBtn.classList.toggle("blink",hazOn)}
+/* ===== INDICATORS ===== */
+let leftOn=false, rightOn=false, hazOn=false, headOn=false;
 
-/* modes */
-let autoOn=false,followOn=false,voiceOn=false;
+function toggleHead(){
+  headOn=!headOn;
+  headBtn.classList.toggle("on",headOn);
+  fetch(`/head?on=${headOn?1:0}`);
+}
+function toggleLeftInd(){
+  leftOn=!leftOn; hazOn=false;
+  hazBtn.classList.remove("on");
+  leftIndBtn.classList.toggle("blink",leftOn);
+  rightIndBtn.classList.remove("blink");
+  fetch(`/ind?side=L&on=${leftOn?1:0}`);
+}
+function toggleRightInd(){
+  rightOn=!rightOn; hazOn=false;
+  hazBtn.classList.remove("on");
+  rightIndBtn.classList.toggle("blink",rightOn);
+  leftIndBtn.classList.remove("blink");
+  fetch(`/ind?side=R&on=${rightOn?1:0}`);
+}
+function toggleHaz(){
+  hazOn=!hazOn;
+  hazBtn.classList.toggle("on",hazOn);
+  leftIndBtn.classList.toggle("blink",hazOn);
+  rightIndBtn.classList.toggle("blink",hazOn);
+  fetch(`/haz?on=${hazOn?1:0}`);
+}
+
+/* ===== MODE STATES ===== */
+let autoOn=false, followOn=false, voiceOn=false;
+
+/* ===== MANUAL ENABLE / DISABLE (NEW) ===== */
 function updateManualState(){
-  const d=autoOn||followOn||voiceOn;
-  document.querySelectorAll('.manual-btn').forEach(b=>b.classList.toggle('manual-disabled',d));
+  const disable = autoOn || followOn || voiceOn;
+  document.querySelectorAll('.manual-btn').forEach(btn=>{
+    btn.classList.toggle('manual-disabled', disable);
+  });
 }
+
+/* ===== DROPDOWN BACKGROUND ===== */
 function updateModeDropdown(){
   const o=modeSelect.options;
   for(let i=0;i<o.length;i++) o[i].style.background="";
@@ -239,42 +295,58 @@ function updateModeDropdown(){
   else if(voiceOn) o[3].style.background="#2ecc71";
   else o[0].style.background="#2ecc71";
 }
+
+/* ===== AUTO ===== */
 function setAuto(v){
-  autoOn=v;followOn=voiceOn=false;
+  autoOn=v; followOn=voiceOn=false;
   autoOnBtn.className=v?"btn green":"btn";
   autoOffBtn.className=v?"btn":"btn red";
-  followOnBtn.className="btn";followOffBtn.className="btn red";
-  voiceOnBtn.className="btn";voiceOffBtn.className="btn red";
-  updateManualState();updateModeDropdown();
+  followOnBtn.className="btn"; followOffBtn.className="btn red";
+  voiceOnBtn.className="btn"; voiceOffBtn.className="btn red";
+  fetch(`/mode?auto=${v?1:0}`);
+  updateModeDropdown();
+  updateManualState();   // ✅ added
 }
+
+/* ===== FOLLOW ===== */
 function setFollow(v){
-  followOn=v;autoOn=voiceOn=false;
+  followOn=v; autoOn=voiceOn=false;
   followOnBtn.className=v?"btn green":"btn";
   followOffBtn.className=v?"btn":"btn red";
-  autoOnBtn.className="btn";autoOffBtn.className="btn red";
-  voiceOnBtn.className="btn";voiceOffBtn.className="btn red";
-  updateManualState();updateModeDropdown();
+  autoOnBtn.className="btn"; autoOffBtn.className="btn red";
+  voiceOnBtn.className="btn"; voiceOffBtn.className="btn red";
+  fetch(`/follow?f=${v?1:0}`);
+  updateModeDropdown();
+  updateManualState();   // ✅ added
 }
+
+/* ===== VOICE ===== */
 function setVoice(v){
-  voiceOn=v;autoOn=followOn=false;
+  voiceOn=v; autoOn=followOn=false;
   voiceOnBtn.className=v?"btn green":"btn";
   voiceOffBtn.className=v?"btn":"btn red";
-  autoOnBtn.className="btn";autoOffBtn.className="btn red";
-  followOnBtn.className="btn";followOffBtn.className="btn red";
-  updateManualState();updateModeDropdown();
+  autoOnBtn.className="btn"; autoOffBtn.className="btn red";
+  followOnBtn.className="btn"; followOffBtn.className="btn red";
+  fetch(`/voiceMode?on=${v?1:0}`);
+  updateModeDropdown();
+  updateManualState();   // ✅ added
 }
 
-/* mic */
+/* ===== MIC ===== */
 function startMic(){
-  if(!voiceOn)return alert("Voice Mode OFF");
+  if(!voiceOn) return alert("Voice Mode is OFF");
   micBtn.classList.add("mic-listening");
-  setTimeout(()=>micBtn.classList.remove("mic-listening"),3000);
+  micBtn.textContent="LISTENING...";
+  setTimeout(()=>{
+    micBtn.classList.remove("mic-listening");
+    micBtn.textContent="TAP TO SPEAK";
+  },3000);
 }
 
-/* init */
-manualPanel.style.display="block";
-updateManualState();
+/* ===== INIT ===== */
 updateModeDropdown();
+updateManualState();
+manualPanel.style.display="block";
 </script>
 
 </body>
